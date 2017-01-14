@@ -180,6 +180,20 @@ cat > /etc/ipsec.d/passwd <<EOF
 $VPN_USER:$VPN_PASSWORD_ENC:xauth-psk
 EOF
 
+
+echo "Adding secondary accounts"
+while read -r user pass; do
+echo "Account:"
+echo $user / $pass
+cat >> /etc/ppp/chap-secrets <<EOF
+"$user" l2tpd "$pass" *
+EOF
+pass_enc=$(openssl passwd -1 "$pass")
+cat >> /etc/ipsec.d/passwd <<EOF
+$user:$pass_enc:xauth-psk
+EOF
+done < /opt/src/accounts.conf
+
 # Update sysctl settings
 SYST='/sbin/sysctl -e -q -w'
 $SYST kernel.msgmnb=65536
